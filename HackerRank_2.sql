@@ -100,3 +100,79 @@ SELECT DISTINCT(city)
 FROM station
 WHERE city LIKE '[^AEIOU]%'
     OR city LIKE '%[^AEIOU]'
+
+-- Query the list of CITY names ending with vowels (a, e, i, o, u) from STATION. Your result cannot contain duplicates.
+SELECT DISTINCT(city)
+FROM station
+WHERE city LIKE '%[AEIOU]'
+
+-- Query the list of CITY names from STATION which have vowels (i.e., a, e, i, o, and u) as both their first and last characters. Your result cannot contain duplicates.
+SELECT DISTINCT(city)
+FROM station
+WHERE city LIKE '[AEIOU]%[AEIOU]'
+
+
+--Query the list of CITY names from STATION that do not start with vowels. Your result cannot contain duplicates.
+SELECT DISTINCT(city)
+FROM station
+WHERE city NOT LIKE '[AEIOU]%'
+
+--Query the list of CITY names from STATION that do not end with vowels. Your result cannot contain duplicates.
+SELECT DISTINCT(city)
+FROM station
+WHERE city NOT LIKE '%[AEIOU]'
+
+
+-- Write a query identifying the type of each record in the TRIANGLES table using its three side lengths.
+--  Output one of the following statements for each record in the table: 
+-- Equilateral: It's a triangle with  sides of equal length.
+-- Isosceles: It's a triangle with sides of equal length.
+-- Scalene: It's a triangle with  sides of differing lengths.
+-- Not A Triangle: The given values of A, B, and C don't form a triangle.
+
+SELECT CASE
+           WHEN A + B <= C THEN 'Not A Triangle'
+           WHEN A = B
+                AND A = C THEN 'Equilateral'
+           WHEN A = B
+                OR B = C
+                OR A = C THEN 'Isosceles'
+           ELSE 'Scalene'
+       END
+FROM triangles;
+
+
+--Generate the following two result
+-- sets: Query an alphabetically ordered list of all names in OCCUPATIONS, immediately followed by the first letter of each profession as a parenthetical (i.e.: enclosed in parentheses).
+-- For example: AnActorName(A),
+--              ADoctorName(D),
+--              AProfessorName(P),
+-- and ASingerName(S). Query the number of ocurrences of each occupation in OCCUPATIONS.
+-- Sort the occurrences in ascending
+-- order, and output them in the following format: There are a total of [occupation_count] [occupation]s.
+-- where [occupation_count] is the number of occurrences of an occupation in OCCUPATIONS
+-- and [occupation] is the lowercase occupation name. If more than one Occupation has the same [occupation_count], they should be ordered alphabetically.
+
+SELECT CONCAT(name, '(',SUBSTRING(occupation,1,1), ')')
+FROM OCCUPATIONS
+ORDER BY name;
+
+
+SELECT 'There are a total of ',
+       COUNT(occupation),
+       CONCAT(LOWER(occupation), 's.')
+FROM OCCUPATIONS
+GROUP BY occupation
+ORDER BY COUNT(occupation);
+
+--Query a count of the number of cities in CITY having a Population larger than .
+SELECT COUNT(name)
+FROM city
+WHERE population > 100000;
+
+
+-- Samantha was tasked with calculating the average monthly salaries for all employees in the EMPLOYEES table, but did not realize her keyboard's  key was broken until after completing the calculation. She wants your help finding the difference between her miscalculation (using salaries with any zeros removed), and the actual average salary.
+-- Write a query calculating the amount of error (i.e.:  average monthly salaries), and round it up to the next integer.
+
+SELECT CEILING(AVG(CAST (salary AS decimal)) - AVG(CAST(REPLACE(salary,'0','') AS decimal)))
+FROM employees;
