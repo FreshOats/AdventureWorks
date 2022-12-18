@@ -176,3 +176,61 @@ WHERE population > 100000;
 
 SELECT CEILING(AVG(CAST (salary AS decimal)) - AVG(CAST(REPLACE(salary,'0','') AS decimal)))
 FROM employees;
+
+-- Query the following two values from the STATION table:
+-- The sum of all values in LAT_N rounded to a scale of decimal places. 
+-- The sum of all values in LONG_W rounded to a scale of decimal places.
+
+SELECT CAST(sum(lat_n) AS decimal(18,2)),
+       CAST(sum(long_w) AS decimal(18,2))
+FROM station
+
+
+-- Given the CITY
+-- and COUNTRY tables,
+--             query the names of all the continents (COUNTRY.Continent)
+-- and their respective average city populations (CITY.Population) rounded down to the nearest integer.
+
+SELECT country.continent,
+       AVG(city.population)
+FROM city
+INNER JOIN country ON city.countrycode = country.code
+GROUP BY country.continent;
+
+
+-- Ketty gives Eve a task to generate a report containing three columns: Name,
+--                                                                       Grade
+-- and Mark. Ketty doesn't want the NAMES of those students who received a grade lower than 8. The report must be in descending
+-- order by grade -- i.e. higher grades are entered first. If there is more than one student with the same grade (8-10) assigned to them, order those particular students by their name alphabetically. Finally, if the grade is lower than 8, use "NULL" as their name and list them by their grades in descending order. If there is more than one student with the same grade (1-7) assigned to them, order those particular students by their marks in ascending order.
+--  Write a query to help Eve.
+
+SELECT CASE
+           WHEN grade < 8 THEN NULL
+           ELSE name
+       END,
+       grade,
+       marks
+FROM students
+INNER JOIN grades ON Marks BETWEEN Min_Mark AND Max_Mark
+ORDER BY Grade DESC,
+         name,
+         marks
+
+
+--Given the CITY and COUNTRY tables, query the names of all cities where the CONTINENT is 'Africa'
+SELECT city.name
+FROM city
+INNER JOIN country ON city.countrycode = country.code
+WHERE country.continent = 'Africa'
+
+
+-- Julia just finished conducting a coding contest,
+-- and she needs your help assembling the leaderboard! Write a query to print the respective hacker_id
+-- and name of hackers who achieved full scores
+-- for
+-- more than one challenge.
+-- Order your output in descending
+-- order by the total number of challenges in which the hacker earned a full score. If
+-- more than one hacker received full scores in same number of challenges,
+--                                                             then
+-- sort them by ascending hacker_id.
