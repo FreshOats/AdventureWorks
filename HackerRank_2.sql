@@ -224,13 +224,24 @@ INNER JOIN country ON city.countrycode = country.code
 WHERE country.continent = 'Africa'
 
 
--- Julia just finished conducting a coding contest,
--- and she needs your help assembling the leaderboard! Write a query to print the respective hacker_id
--- and name of hackers who achieved full scores
--- for
--- more than one challenge.
--- Order your output in descending
--- order by the total number of challenges in which the hacker earned a full score. If
--- more than one hacker received full scores in same number of challenges,
---                                                             then
--- sort them by ascending hacker_id.
+-- We define an employee's total earnings to be their monthly worked,
+-- and the maximum total earnings to be the maximum total earnings
+-- for any employee in the Employee table. Write a query to find the maximum total earnings
+-- for all employees as well as the total number of employees who have maximum total earnings. Then print these
+-- values as space-separated integers.
+
+SELECT TOP 1 (salary * months), COUNT(employee_id)
+FROM Employee
+GROUP BY (salary*months)
+ORDER BY (salary*months) DESC;
+
+
+-- Given the CITY
+-- and COUNTRY tables,
+--             query the sum of the populations of all cities
+-- where the CONTINENT is 'Asia'.
+
+SELECT sum(city.population)
+FROM City
+INNER JOIN country ON city.countrycode = country.code
+WHERE country.continent = 'Asia'
