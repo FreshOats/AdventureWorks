@@ -188,9 +188,9 @@ ORDER BY Fp.Salary
 -- order by the value of X. List the rows such that X1 ≤ Y1.
 
 WITH CTE AS
-    ( SELECT X, Y, rn = ROW_NUMBER() OVER(
-                                          ORDER BY X)
-     FROM Functions ) -- applying a common table expression to create a temp table with row numbers
+    ( SELECT X, Y, rn = ROW_NUMBER() 
+        OVER(ORDER BY X)
+        FROM Functions ) -- applying a common table expression to create a temp table with row numbers
 SELECT DISTINCT f1.X,
                 f1.Y -- don't select all, because it contains rn now
 FROM CTE f1
@@ -199,3 +199,130 @@ AND f1.Y = f2.X
 AND f1.rn <> f2.rn -- it's not referring to itself in cases where X1 = Y1
 AND f1.X <= f1.Y -- meets the X is less than Y condition
 ORDER BY f1.x
+
+
+-- Hermione decides the best way to choose is by determining the minimum number of gold galleons needed to buy
+--  each non-evil wand of high power and age. Write a query to print the id, age, coins_needed, and power of the
+--   wands that Ron's interested in, sorted in order of descending power. 
+--   If more than one wand has same power, sort the result in order of descending age.
+
+-- SELECT w.id,
+--        wp.age,
+--        MIN(w.coins_needed),
+--        w.power
+-- FROM Wands w
+-- INNER JOIN Wands_Property wp ON w.code = wp.code
+-- WHERE wp.is_evil = 0
+-- GROUP BY w.id
+-- ORDER BY w.power DESC,
+--          wp.age DESC
+-- The above does not work because it doesn't take into account that there are multiple wands that are the same power and same age with different costs
+
+
+
+-- This creates a query with the subquery in the FROM clause, which includes all necessary incormation but aggregates
+-- the coins_needed as coins to find the minimum, saving this as subquery sq. After the FROM clause, the 
+-- subquery is used, establishing this having the same code, power and coins needed prior to ordering 
+-- My solution
+SELECT id,
+       age,
+       coins,
+       sq.power
+FROM Wands w,
+    -- This subquery joins the tables and groups by code, age and power to select the minimum value for coins_needed.
+    -- This eliminates the duplicates from those that have the same power and age
+    (SELECT w.code,   -- code must be here as the aggregate to set equal so we can use it in the WHERE clause 
+            age,
+            w.power,
+            MIN(coins_needed) AS coins
+     FROM wands w
+     INNER JOIN wands_property wp ON w.code = wp.code
+     WHERE is_evil = 0
+     GROUP BY w.code, -- code must be in the group by in order to keep in the select list as an aggregate
+              age,
+              w.power) AS sq
+WHERE w.code = sq.code
+    AND w.power = sq.power
+    AND w.coins_needed = sq.coins
+ORDER BY sq.power DESC,
+         age DESC
+
+
+-- SakshiUArora solution -- She avoids the inner join by including the equalities in the WHERE clause
+SELECT id,
+       age,
+       cn,
+       T.power
+FROM Wands as w,
+
+    (SELECT w.code,
+            age,
+            w.power,
+            MIN(coins_needed) as cn
+     FROM Wands as w,
+          Wands_Property as wp
+     WHERE w.code = wp.code
+         and is_evil=0
+     GROUP BY w.code,
+              age,
+              w.power) AS T
+WHERE w.code = T.code
+    and w.power=T.power
+    and w.coins_needed=T.cn
+ORDER BY T.power DESC,
+         age DESC;
+
+
+-- _____ hpaditar457 solution -- this seemed to take a long timea
+WITH cte AS
+(                           -- Creating this common table expression uses the original query I had made, but includes a row number, ranking the rows for 
+                            -- coins needed in ascending order, so the top is the cheapest 
+    SELECT
+        w.id,
+        wp.age,
+        w.coins_needed,
+        ROW_NUMBER() OVER(PARTITION BY wp.age, w.power ORDER BY w.coins_needed) AS rn,
+        w.power
+    FROM Wands w
+    INNER JOIN Wands_Property wp
+    ON w.code = wp.code
+    WHERE wp.is_evil = 0
+)
+SELECT
+    id,
+    age,
+    coins_needed,
+    power
+FROM cte
+WHERE rn = 1
+ORDER BY power DESC, age DESC
+
+
+
+
+
+------- Chase2Learn solution -- this uses a subquery in the Where clause only selecting the 
+-- minimum number of coins needed rather than creating the subquery in the FROM clause or createing a ranking variable 
+SELECT w.id,
+       wp.age,
+       w.coins_needed,
+       w.power
+FROM wands w
+JOIN wands_property wp ON w.code = wp.code
+WHERE wp.is_evil = 0
+    AND w.coins_needed =
+        (SELECT MIN(ww.coins_needed)
+         FROM wands ww
+         JOIN wands_property wpp ON ww.code = wpp.code
+         WHERE wp.age = wpp.age
+             AND w.power = ww.power)
+ORDER BY w.power DESC,
+         wp.age DESC;
+
+
+
+-- Julia asked her students to create some coding challenges. Write a query to print the hacker_id, name, 
+-- and the total number of challenges created by each student. Sort your results by the total number of 
+-- challenges in descending order. If more than one student created the same number of challenges, then 
+-- sort the result by hacker_id. If more than one student created the same number of challenges and the 
+-- count is less than the maximum number of challenges created, then exclude those students from the result.
