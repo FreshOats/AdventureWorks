@@ -326,3 +326,19 @@ ORDER BY w.power DESC,
 -- challenges in descending order. If more than one student created the same number of challenges, then 
 -- sort the result by hacker_id. If more than one student created the same number of challenges and the 
 -- count is less than the maximum number of challenges created, then exclude those students from the result.
+
+
+SELECT c.hacker_id,
+       h.name,
+       COUNT(c.hacker_id) challenges_created
+FROM challenges c
+LEFT JOIN hackers h ON h.hacker_id = c.hacker_id
+GROUP BY c.hacker_id,
+         h.name
+ORDER BY challenges_created DESC,
+         hacker_id ASC;
+-- THIS block gets everyone sorted in order, but does not filter out the dupes below the max
+
+
+--This works.... the cte is required because we need to create a new table to use for the next part, which is filtering out 
+-- the values that have dupes except for the max value
