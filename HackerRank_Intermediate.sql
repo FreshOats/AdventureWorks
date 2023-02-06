@@ -342,3 +342,75 @@ ORDER BY challenges_created DESC,
 
 --This works.... the cte is required because we need to create a new table to use for the next part, which is filtering out 
 -- the values that have dupes except for the max value
+
+
+--The total score of a hacker is the sum of their maximum scores
+-- for all of the challenges. Write a query to print the hacker_id, name,
+-- and total score of the hackers ordered by the descending score. If
+-- more than one hacker achieved the same total score, then
+-- sort the result by ascending hacker_id. Exclude all hackers with a total score of
+-- from your result.
+
+-- Total Score = sum of each hacker's max scores per challenge
+-- Show hacker_id, name, total score desc (3 outputs)
+-- If more than 1 has same total, ascending hacker_id
+-- Only include total score > 0 
+
+-- Tables: 
+-- Hacker: hacker_id, name
+-- Submissions: submission_id, hacker_id, challenge_id, score
+
+-- Each hacker can have multiple submissions per challenge, only want the max score submission
+-- Start with only the submissions table - name is easy to add at the end
+WITH max_scores_per_challenge AS
+    (SELECT MAX(s.score) AS score,
+            h.hacker_id,
+            h.name,
+            s.challenge_id
+     FROM submissions AS s
+     INNER JOIN hackers AS h ON h.hacker_id = s.hacker_id
+     GROUP BY h.hacker_id,
+              s.challenge_id,
+              h.name)
+SELECT hacker_id,
+       name,
+       SUM(score)
+FROM max_scores_per_challenge
+GROUP BY name,
+         hacker_id
+HAVING SUM(score) > 0
+ORDER BY SUM(score) DESC, hacker_id ASC;
+
+
+-- You are given a table, Projects, containing three columns: 
+-- Task_ID, Start_Date and End_Date. 
+-- It is guaranteed that the difference between the End_Date and the Start_Date is equal to 1 day for each row in the table.
+
+/* If the End_Date of the tasks are consecutive, then they are part of the same project. 
+Samantha is interested in finding the total number of different projects completed.
+Write a query to output the start and end dates of projects listed by the number of days 
+it took to complete the project in ascending order. If there is more than one project 
+that have the same number of completion days, then order by the start date of the project.
+*/
+
+WITH Project_Start AS
+    (SELECT Start_Date,
+            ROW_NUMBER() OVER (
+                               ORDER BY Start_Date) AS Project_Number
+     FROM projects
+     WHERE Start_Date NOT IN
+             (SELECT End_Date
+              FROM projects) ),
+     Project_End AS
+    (SELECT End_Date,
+            ROW_NUMBER() OVER (
+                               ORDER BY END_Date) AS Project_Number
+     FROM projects
+     WHERE End_Date NOT IN
+             (SELECT Start_Date
+              FROM projects) )
+SELECT S.Start_Date,
+       E.End_Date
+FROM Project_Start AS S
+INNER JOIN Project_End AS E ON S.Project_Number = E.Project_Number
+ORDER BY DATEDIFF(day, S.Start_Date, E.End_Date) ASC, Start_Date ASC
