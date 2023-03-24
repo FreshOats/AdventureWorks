@@ -382,6 +382,42 @@ HAVING SUM(score) > 0
 ORDER BY SUM(score) DESC, hacker_id ASC;
 
 
+
+--THIS uses a cte with window functions to work through the ranks and counts
+WITH ranks_and_counts AS
+(   SELECT h.hacker_id,
+             h.name,
+             COUNT(c.challenge_id) AS total_per_challenge,
+             DENSE_RANK() OVER(ORDER BY COUNT(c.challenge_id)DESC) AS rn,
+             COUNT(COUNT(c.challenge_id)) OVER (PARTITION BY COUNT(c.challenge_id)) AS totals_count
+     FROM 
+        challenges c
+        INNER JOIN 
+        hackers h 
+            ON h.hacker_id = c.hacker_id
+     GROUP BY h.hacker_id,
+              h.name
+     ORDER BY 
+        total_per_challenge DESC, 
+        h.hacker_id
+)
+SELECT hacker_id,
+       name,
+       total_per_challenge
+FROM 
+    ranks_and_counts
+WHERE 
+    totals_count = 1
+    OR 
+    rn = 1
+ORDER BY 
+    total_per_challenge DESC,
+    hacker_id
+
+
+
+
+
 -- You are given a table, Projects, containing three columns: 
 -- Task_ID, Start_Date and End_Date. 
 -- It is guaranteed that the difference between the End_Date and the Start_Date is equal to 1 day for each row in the table.
